@@ -5,13 +5,10 @@ import fs from 'fs/promises';
 const BROWSERS = ['chrome', 'firefox', 'MicrosoftEdge', 'safari'];
 
 async function buildDriver(browser) {
-  // Selenium 4 uses Selenium Manager for Chrome/Firefox/Edge.
-  // Safari works on macOS with: `safaridriver --enable` (one time).
   return new Builder().forBrowser(browser).build();
 }
 
 async function waitForStablePage(driver) {
-  // Wait for document complete and a small settle time for fonts and async UI
   await driver.wait(async () =>
     driver.executeScript('return document.readyState').then(s => s === 'complete'), 20000);
   await driver.sleep(700);
