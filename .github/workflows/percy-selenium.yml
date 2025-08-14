@@ -1,9 +1,9 @@
 name: Percy Selenium Snapshots
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main, staging ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   linux-chrome-firefox:
@@ -17,14 +17,14 @@ jobs:
           node-version: '20'
       - name: Install dependencies
         run: npm ci || npm i
-      - name: Run Chrome
+      - name: Run Chrome snapshots
         run: npm run test:chrome
-      - name: Run Firefox
+      - name: Run Firefox snapshots
         run: npm run test:firefox
 
   macos-safari:
     runs-on: macos-latest
-    if: always()  # run even if linux job fails
+    needs: linux-chrome-firefox
     env:
       PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
     steps:
@@ -36,21 +36,5 @@ jobs:
         run: npm ci || npm i
       - name: Enable SafariDriver
         run: sudo safaridriver --enable
-      - name: Run Safari
+      - name: Run Safari snapshots
         run: npm run test:safari
-
-  # Edge is best run locally or on a Windows runner with Edge installed.
-  # Uncomment if you add a Windows job with Edge available.
-  # windows-edge:
-  #   runs-on: windows-latest
-  #   env:
-  #     PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #     - name: Install dependencies
-  #       run: npm ci || npm i
-  #     - name: Run Edge
-  #       run: npm run test:edge
