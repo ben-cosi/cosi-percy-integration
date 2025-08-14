@@ -1,48 +1,35 @@
 import { Builder } from 'selenium-webdriver';
 import percySnapshot from '@percy/selenium-webdriver';
 import fs from 'fs/promises';
+import chrome from 'selenium-webdriver/chrome.js';
+import firefox from 'selenium-webdriver/firefox.js';
+import edge from 'selenium-webdriver/edge.js';
 
 const BROWSERS = ['chrome', 'firefox', 'MicrosoftEdge', 'safari'];
+const IS_CI = process.env.CI === 'true';
 
 async function buildDriver(browser) {
-  return new Builder().forBrowser(browser).build();
-}
-
-async function waitForStablePage(driver) {
-  await driver.wait(async () =>
-    driver.executeScript('return document.readyState').then(s => s === 'complete'), 20000);
-  await driver.sleep(700);
-}
-
-async function runForBrowser(browser) {
-  const driver = await buildDriver(browser);
-  try {
-    const content = await fs.readFile(new URL('../urls.json', import.meta.url));
-    const list = JSON.parse(content.toString());
-
-    for (const { name, url } of list) {
-      console.log(`[${browser}] visiting: ${url}`);
-      await driver.get(url);
-      await waitForStablePage(driver);
-
-      await percySnapshot(driver, name, {
-        widths: [1600],
-        minHeight: 1024
-      });
-      console.log(`[${browser}] snapshot: ${name}`);
+  switch (browser) {
+    case 'chrome': {
+      const opts = new chrome.Options();
+      if (IS_CI) opts.addArguments('--headless=new', '--no-sandbox', '--disable-dev-shm-usage');
+      return new Builder().forBrowser('chrome').setChromeOptions(opts).build();
     }
-  } finally {
-    await driver.quit();
+    case 'firefox': {
+      const opts = new firefox.Options();
+      if (IS_CI) opts.addArguments('-headless');
+      return new Builder().forBrowser('firefox').setFirefoxOptions(opts).build();
+    }
+    case 'MicrosoftEdge': {
+      const opts = new edge.Options();
+      if (IS_CI) opts.addArguments('--headless=new', '--no-sandbox', '--disable-dev-shm-usage');
+      return new Builder().forBrowser('MicrosoftEdge').setEdgeOptions(opts).build();
+    }
+    case 'safari': {
+      // Safari has no headless mode. Works on macOS runner.
+      return new Builder().forBrowser('safari').build();
+    }
+    default:
+      throw new Error(`Unsupported browser: ${browser}`);
   }
 }
-
-(async function main() {
-  const arg = process.argv[2] || 'chrome';
-  const targets = arg === 'all' ? BROWSERS : [arg];
-
-  for (const browser of targets) {
-    console.log(`\n=== Running in ${browser} ===`);
-    await runForBrowser(browser);
-  }
-  console.log('\nDone.');
-})();

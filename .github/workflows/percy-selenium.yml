@@ -2,23 +2,38 @@ name: Percy Selenium Snapshots
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, staging ]
   workflow_dispatch:
 
 jobs:
   linux-chrome-firefox:
     runs-on: ubuntu-latest
     env:
+      CI: true
       PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+      PERCY_LOGLEVEL: debug
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      # Install Google Chrome
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-linux-signing-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
       - name: Install dependencies
         run: npm ci || npm i
+
       - name: Run Chrome snapshots
         run: npm run test:chrome
+
       - name: Run Firefox snapshots
         run: npm run test:firefox
 
@@ -26,7 +41,9 @@ jobs:
     runs-on: macos-latest
     needs: linux-chrome-firefox
     env:
+      CI: true
       PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+      PERCY_LOGLEVEL: debug
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
