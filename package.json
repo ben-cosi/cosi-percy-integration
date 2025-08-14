@@ -1,0 +1,17 @@
+{
+  "name": "cosi-selenium-percy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:chrome": "percy exec -- node src/run.js chrome",
+    "test:firefox": "percy exec -- node src/run.js firefox",
+    "test:edge": "percy exec -- node src/run.js MicrosoftEdge",
+    "test:safari": "percy exec -- node src/run.js safari",
+    "test:all": "percy exec -- node src/run.js all"
+  },
+  "devDependencies": {
+    "@percy/cli": "^1.29.0",
+    "@percy/selenium-webdriver": "^2.2.3",
+    "selenium-webdriver": "^4.23.0"
+  }
+}
