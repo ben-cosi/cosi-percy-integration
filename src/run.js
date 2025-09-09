@@ -24,7 +24,7 @@ async function runForBrowser(browser) {
       console.log(`[${browser}] visiting: ${url}`);
       await driver.get(url);
       await waitForStablePage(driver);
-      await driver.sleep(2000);
+      await driver.sleep(5000);
       await percySnapshot(driver, name, {
         widths: [1600],
         minHeight: 1024

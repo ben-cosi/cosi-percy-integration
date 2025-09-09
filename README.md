@@ -1,1 +1,1 @@
-blah
+echo $PERCY_TOKEN  blah
